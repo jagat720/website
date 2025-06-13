@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Student Management System with Messaging</title>
+<style>
+  /* Reset & base */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: #f8fafc;
+    color: #1e293b;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "header"
+      "main"
+      "footer";
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    outline-offset: 3px;
+  }
+  /* Material Icons */
+  @import url('https://fonts.googleapis.com/css2?family=Material+Icons');
+
+  .material-icons {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    direction: ltr;
+    user-select: none;
+    -webkit-font-feature-settings: 'liga';
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Typography */
+  h1, h2, h3, h4 {
+    font-weight: 600;
+    margin: 0;
+  }
+  h1 {
+    font-size: 1.75rem;
+  }
+  h2 {
+    font-size: 1.25rem;
+  }
+  h3 {
+    font-size: 1rem;
+  }
+  p, label {
+    font-size: 0.9rem;
+  }
+
+  /* Layout */
+  header {
+    grid-area: header;
+    height: 60px;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    user-select: none;
+  }
+  header .logo {
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: 0.05em;
+    user-select: text;
+  }
+  header .menu-button {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 28px;
+    margin-right: 16px;
+  }
+
+  main {
+    grid-area: main;
+    display: grid;
+    background-color: white;
+    height: calc(100vh - 60px - 40px);
+    /* We will set grid-template-columns dynamically with CSS. */
+    overflow: hidden;
+  }
+  footer {
+    grid-area: footer;
+    height: 40px;
+    background: #1e293b;
+    color: white;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Responsive breakpoints - mobile first */
+  /* Mobile: 320px - 767px */
+  main {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    grid-column: 1 / 2;
+    overflow-y: auto;
+    border-right: 1px solid #e2e8f0;
+    background: #f1f5f9;
+  }
+  .sidebar.collapsed {
+    display: none;
+  }
+  .students-list {
+    list-style: none;
+    padding: 8px 0;
+    margin: 0;
+  }
+  .students-list li {
+    padding: 8px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #e2e8f0;
+    transition: background-color 0.2s ease;
+  }
+  .students-list li.selected,
+  .students-list li:hover {
+    background: #bae6fd;
+  }
+  .student-name {
+    font-weight: 600;
+  }
+  .student-status {
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+
+  .content {
+    grid-column: 1 / 2;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Student info panel */
+  .student-info {
+    flex: 1 1 auto;
+    padding: 16px 24px;
+    overflow-y: auto;
+  }
+  .student-info h2 {
+    margin-bottom: 8px;
+  }
+  .student-info .section {
+    margin-bottom: 24px;
+  }
+  .student-info label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .student-info .field {
+    background: #f1f5f9;
+    border-radius: 8px;
+    padding: 10px 14px;
+    user-select: text;
+    word-wrap: break-word;
+  }
+  .student-info table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .student-info table th,
+  .student-info table td {
+    border: 1px solid #cbd5e1;
+    padding: 8px;
+    text-align: left;
+    font-size: 0.9rem;
+  }
+  .student-info table th {
+    background: #e0f2fe;
+  }
+
+  /* Messaging panel */
+  .messaging-panel {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid #e2e8f0;
+  }
+  .conversations-list {
+    flex: 0 0 140px;
+    overflow-x: auto;
+    background: #f1f5f9;
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    scrollbar-width: thin;
+  }
+  .conversations-list::-webkit-scrollbar {
+    height: 6px;
+  }
+  .conversations-list::-webkit-scrollbar-thumb {
+    background: #a5b4fc;
+    border-radius: 3px;
+  }
+  .conversation-avatar {
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.75rem;
+    color: white;
+    background: #60a5fa;
+    user-select: none;
+    position: relative;
+  }
+  .conversation-avatar.selected,
+  .conversation-avatar:hover {
+    border-color: #2563eb;
+  }
+  .conversation-avatar.online::after {
+    content: '';
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    width: 12px;
+    height: 12px;
+    background: #22c55e;
+    border-radius: 50%;
+    border: 2px solid white;
+  }
+  .conversation-avatar.abbr {
+    text-transform: uppercase;
+  }
+
+  .chat-window {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 20px;
+    overflow-y: auto;
+    background: #fefefe;
+  }
+  .chat-message {
+    max-width: 70%;
+    padding: 10px 16px;
+    border-radius: 16px;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    position: relative;
+    word-wrap: break-word;
+  }
+  .chat-message.sent {
+    background: #2563eb;
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+  }
+  .chat-message.received {
+    background: #e2e8f0;
+    color: #1e293b;
+    margin-right: auto;
+    border-bottom-left-radius: 4px;
+  }
+  .chat-message .timestamp {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.7);
+    position: absolute;
+    bottom: -16px;
+    right: 12px;
+    user-select: none;
+  }
+  .chat-message.received .timestamp {
+    color: rgba(30, 41, 59, 0.6);
+    right: auto;
+    left: 12px;
+  }
+  .chat-message .status-icon {
+    position: absolute;
+    bottom: -16px;
+    right: 36px;
+    font-size: 14px;
+    user-select: none;
+  }
+  .chat-message.sent .status-icon {
+    color: rgba(255,255,255,0.7);
+  }
+  .chat-message.received .status-icon {
+    display: none;
+  }
+  .chat-message.image img {
+    max-width: 200px;
+    border-radius: 12px;
+    display: block;
+  }
+  .typing-indicator {
+    font-style: italic;
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-left: 8px;
+  }
+
+  .chat-input-container {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #e2e8f0;
+    padding: 12px 20px;
+    background: #f1f5f9;
+  }
+  .chat-input-container textarea {
+    flex: 1 1 auto;
+    border-radius: 20px;
+    border: 1px solid #cbd5e1;
+    padding: 12px 16px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: none;
+    min-height: 40px;
+    max-height: 80px;
+    line-height: 1.2;
+  }
+  .chat-input-container button.send-btn {
+    background: #3b82f6;
+    border: none;
+    border-radius: 50%;
+    color: white;
+    width: 40px;
+    height: 40px;
+    margin-left: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s ease;
+  }
+  .chat-input-container button.send-btn:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+  }
+  .chat-input-container button.send-btn:hover:not(:disabled) {
+    background: #2563eb;
+  }
+  .chat-input-container button.send-btn:focus-visible {
+    outline-offset: 3px;
+  }
+
+  /* Right panel on Desktop */
+  .right-panel {
+    display: none;
+    border-left: 1px solid #e2e8f0;
+    background: #f1f5f9;
+    padding: 16px 24px;
+    overflow-y: auto;
+  }
+  .right-panel h3 {
+    margin-bottom: 12px;
+  }
+  .right-panel .group-members {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .right-panel .group-members li {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+  }
+  .right-panel .group-members .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #60a5fa;
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    user-select: none;
+  }
+
+  /* Scrollbar Styling */
+  .sidebar::-webkit-scrollbar,
+  .student-info::-webkit-scrollbar,
+  .chat-window::-webkit-scrollbar,
+  .right-panel::-webkit-scrollbar {
+    width: 8px;
+  }
+  .sidebar::-webkit-scrollbar-thumb,
+  .student-info::-webkit-scrollbar-thumb,
+  .chat-window::-webkit-scrollbar-thumb,
+  .right-panel::-webkit-scrollbar-thumb {
+    background-color: #a5b4fc;
+    border-radius: 6px;
+  }
+
+  /* Tablet: 768px - 1023px */
+  @media (min-width: 768px) {
+    header .menu-button {
+      display: block;
+    }
+    main {
+      grid-template-columns: 260px 1fr;
+      height: calc(100vh - 60px - 40px);
+    }
+    .sidebar.collapsed {
+      display: none;
+    }
+    .content {
+      grid-column: 2 / 3;
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  /* Desktop: 1024px - 1439px */
+  @media (min-width: 1024px) {
+    main {
+      grid-template-columns: 280px 1fr 280px;
+      height: calc(100vh - 60px - 40px);
+    }
+    .sidebar {
+      display: block !important;
+    }
+    .right-panel {
+      display: block;
+    }
+    .content {
+      grid-column: 2 / 3;
+    }
+  }
+
+  /* Large Desktop: 1440px+ */
+  @media (min-width: 1440px) {
+    main {
+      max-width: 1440px;
+      margin: 0 auto;
+      grid-template-columns: 280px 1fr 320px;
+    }
+  }
+
+  /* Focus styles */
+  button:focus-visible,
+  a:focus-visible,
+  li:focus-visible {
+    outline: 3px solid #60a5fa;
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <button aria-label="Toggle menu" class="menu-button" id="menuToggle" aria-expanded="false">
+      <span class="material-icons">menu</span>
+    </button>
+    <div class="logo" tabindex="0">Student Management</div>
+  </header>
+  <main>
+    <aside class="sidebar" id="sidebar" aria-label="Student list sidebar">
+      <ul class="students-list" id="studentsList" role="listbox" aria-label="Students">
+        <!-- Students inserted here by JS -->
+      </ul>
+    </aside>
+    <section class="content" id="content" tabindex="0" aria-live="polite" aria-atomic="true">
+      <!-- Student Info OR Messaging goes here -->
+      <div class="student-info" id="studentInfo" hidden>
+        <h2 id="studentName">Student Name</h2>
+        <div class="section">
+          <label>Student ID</label>
+          <div class="field" id="studentId"></div>
+        </div>
+        <div class="section">
+          <label>Enrollment Status</label>
+          <div class="field" id="enrollmentStatus"></div>
+        </div>
+        <div class="section">
+          <label>Attendance %</label>
+          <div class="field" id="attendancePercent"></div>
+        </div>
+        <div class="section">
+          <label>Grades</label>
+          <table id="gradesTable" aria-describedby="gradesDescription">
+            <thead>
+              <tr><th>Subject</th><th>Grade</th></tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+          <div id="gradesDescription" class="sr-only">Student grades table</div>
+        </div>
+      </div>
+      <div class="messaging-panel" id="messagingPanel" hidden>
+        <div class="conversations-list" id="conversationsList" role="list" aria-label="Conversations">
+          <!-- Conversation avatars inserted here by JS -->
+        </div>
+        <div class="chat-window" id="chatWindow" tabindex="0" aria-live="polite" aria-atomic="false" role="log" aria-label="Chat messages">
+          <!-- Chat messages go here -->
+        </div>
+        <div class="chat-input-container">
+          <textarea id="chatInput" rows="1" aria-label="Message input" placeholder="Type a message…" autocomplete="off"></textarea>
+          <button class="send-btn" id="sendBtn" aria-label="Send message" disabled>
+            <span class="material-icons">send</span>
+          </button>
+        </div>
+      </div>
+    </section>
+    <aside class="right-panel" id="rightPanel" aria-label="Conversation details" hidden>
+      <h3>Group Members</h3>
+      <ul class="group-members" id="groupMembersList">
+        <!-- Group members inserted here by JS -->
+      </ul>
+    </aside>
+  </main>
+  <footer>
+    &copy; 2024 Student Management System
+  </footer>
+  <script>
+    // Demo data: Students
+    const students = [
+      {
+        id: 'S1001',
+        name: 'Alice Johnson',
+        enrollment: 'Active',
+        attendance: 95,
+        grades: [
+          { subject: 'Mathematics', grade: 'A' },
+          { subject: 'English', grade: 'B+' },
+          { subject: 'History', grade: 'A-' }
+        ],
+        avatar: 'AJ',
+        online: true,
+      },
+      {
+        id: 'S1002',
+        name: 'Bob Smith',
+        enrollment: 'Active',
+        attendance: 88,
+        grades: [
+          { subject: 'Mathematics', grade: 'B' },
+          { subject: 'English', grade: 'A' },
+          { subject: 'History', grade: 'B+' }
+        ],
+        avatar: 'BS',
+        online: false,
+      },
+      {
+        id: 'S1003',
+        name: 'Carol White',
+        enrollment: 'Inactive',
+        attendance: 75,
+        grades: [
+          { subject: 'Mathematics', grade: 'C+' },
+          { subject: 'English', grade: 'B-' },
+          { subject: 'History', grade: 'B' }
+        ],
+        avatar: 'CW',
+        online: true,
+      }
+    ];
+
+    // Demo data: Users (for conversations, could be students or teachers)
+    const users = [
+      { id: 'U1001', name: 'Alice Johnson', avatar: 'AJ', online: true },
+      { id: 'U1002', name: 'Bob Smith', avatar: 'BS', online: false },
+      { id: 'U1003', name: 'Carol White', avatar: 'CW', online: true },
+      { id: 'U1004', name: 'Teacher Tom', avatar: 'TT', online: true }
+    ];
+
+    // Demo Data: Conversations, indexed by conversation id
+    const conversations = [
+      {
+        id: 'conv1',
+        participants: ['U1001', 'U1004'],
+        messages: [
+          { sender: 'U1004', timestamp: new Date(Date.now() - 3600 * 1000 * 4), type: 'text', content: 'Hello Alice, how are you?' , status: 'read'},
+          { sender: 'U1001', timestamp: new Date(Date.now() - 3600 * 1000 * 3.75), type: 'text', content: 'Good thanks, teacher!' , status: 'read'},
+          { sender: 'U1004', timestamp: new Date(Date.now() - 3600 * 1000 * 2), type: 'image', content: 'https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/c7ba385a-119b-45fe-8dca-11e225f68d7a.png' , status: 'delivered'}
+        ]
+      },
+      {
+        id: 'conv2',
+        participants: ['U1002', 'U1004'],
+        messages: [
+          { sender: 'U1002', timestamp: new Date(Date.now() - 3600 * 1000 * 5), type: 'text', content: 'Can you help me with math?' , status: 'read'},
+          { sender: 'U1004', timestamp: new Date(Date.now() - 3600 * 1000 * 4.5), type: 'text', content: 'Sure, Bob!' , status: 'read'},
+          { sender: 'U1002', timestamp: new Date(Date.now() - 3600 * 1000 * 1), type: 'text', content: 'Thanks!' , status: 'sent'}
+        ]
+      }
+    ];
+
+    // Current state
+    let selectedStudentId = null;
+    let selectedConversationId = null;
+    let sidebarCollapsed = false;
+
+    const sidebar = document.getElementById('sidebar');
+    const menuToggleBtn = document.getElementById('menuToggle');
+    const studentsListEl = document.getElementById('studentsList');
+    const studentInfoEl = document.getElementById('studentInfo');
+    const messagingPanelEl = document.getElementById('messagingPanel');
+    const rightPanel = document.getElementById('rightPanel');
+    const contentEl = document.getElementById('content');
+    const conversationsListEl = document.getElementById('conversationsList');
+    const chatWindowEl = document.getElementById('chatWindow');
+    const chatInputEl = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const groupMembersList = document.getElementById('groupMembersList');
+
+    function formatTimestamp(date) {
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
+      const ampm = hours >= 12 ? 'PM':'AM';
+      const h = hours % 12 || 12;
+      return `${h}:${minutes.toString().padStart(2,'0')} ${ampm}`;
+    }
+
+    function createStudentListItem(student) {
+      const li = document.createElement('li');
+      li.tabIndex = 0;
+      li.setAttribute('role', 'option');
+      li.setAttribute('aria-selected', 'false');
+      li.dataset.studentId = student.id;
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'student-name';
+      nameSpan.textContent = student.name;
+
+      const statusSpan = document.createElement('span');
+      statusSpan.className = 'student-status';
+      statusSpan.textContent = `${student.enrollment} · Attendance: ${student.attendance}%`;
+
+      li.appendChild(nameSpan);
+      li.appendChild(document.createElement('br'));
+      li.appendChild(statusSpan);
+
+      li.addEventListener('click', () => selectStudent(student.id));
+      li.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectStudent(student.id);
+        }
+      });
+
+      return li;
+    }
+
+    function renderStudentsList() {
+      studentsListEl.innerHTML = '';
+      for(let student of students) {
+        const li = createStudentListItem(student);
+        if(student.id === selectedStudentId) {
+          li.classList.add('selected');
+          li.setAttribute('aria-selected', 'true');
+        }
+        studentsListEl.appendChild(li);
+      }
+    }
+
+    function selectStudent(id) {
+      if(selectedStudentId === id) return;
+      selectedStudentId = id;
+      selectedConversationId = null;
+      rightPanel.hidden = true;
+      renderStudentsList();
+      showStudentInfo(id);
+      hideMessagingPanel();
+      if(window.innerWidth <= 768) {
+        sidebarCollapsed = true;
+        updateSidebarState();
+      }
+    }
+
+    function showStudentInfo(id) {
+      const student = students.find(s => s.id === id);
+      if(!student) return;
+      studentInfoEl.hidden = false;
+      messagingPanelEl.hidden = true;
+
+      document.getElementById('studentName').textContent = student.name;
+      document.getElementById('studentId').textContent = student.id;
+      document.getElementById('enrollmentStatus').textContent = student.enrollment;
+      document.getElementById('attendancePercent').textContent = student.attendance + '%';
+
+      const tbody = document.querySelector('#gradesTable tbody');
+      tbody.innerHTML = '';
+      for(let grade of student.grades){
+        const tr = document.createElement('tr');
+        const tdSubject = document.createElement('td');
+        tdSubject.textContent = grade.subject;
+        const tdGrade = document.createElement('td');
+        tdGrade.textContent = grade.grade;
+        tr.appendChild(tdSubject);
+        tr.appendChild(tdGrade);
+        tbody.appendChild(tr);
+      }
+    }
+
+    function hideStudentInfo() {
+      studentInfoEl.hidden = true;
+    }
+
+    // Messaging related functions
+
+    function createConversationAvatar(user, selected) {
+      const div = document.createElement('div');
+      div.className = 'conversation-avatar abbr';
+      if(user.online) div.classList.add('online');
+      if(selected) div.classList.add('selected');
+      div.textContent = user.avatar;
+      div.title = user.name;
+      div.tabIndex = 0;
+      div.dataset.userId = user.id;
+      div.addEventListener('click', () => selectConversationByUserId(user.id));
+      div.addEventListener('keydown', e => {
+        if(e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectConversationByUserId(user.id);
+        }
+      });
+      return div;
+    }
+
+    // Populate conversations list with participants
+    function renderConversationsList() {
+      conversationsListEl.innerHTML = '';
+      for(let conv of conversations) {
+        const otherUserId = conv.participants.find(u => u !== 'U1004'); // U1004 = Teacher Tom (this user)
+        const otherUser = users.find(u => u.id === otherUserId);
+        if(!otherUser) continue;
+        const selected = conv.id === selectedConversationId;
+        const avatar = createConversationAvatar(otherUser, selected);
+        avatar.dataset.convId = conv.id;
+        conversationsListEl.appendChild(avatar);
+      }
+    }
+
+    function selectConversationByUserId(userId) {
+      const conv = conversations.find(c => c.participants.includes(userId) && c.participants.includes('U1004'));
+      if(!conv) return;
+      selectedConversationId = conv.id;
+      selectedStudentId = null;
+      renderConversationsList();
+      showMessagingPanel(selectedConversationId);
+      hideStudentInfo();
+      if(window.innerWidth <= 768) {
+        sidebarCollapsed = true;
+        updateSidebarState();
+      }
+    }
+
+    function showMessagingPanel(convId) {
+      messagingPanelEl.hidden = false;
+      studentInfoEl.hidden = true;
+      rightPanel.hidden = false;
+
+      renderChatWindow(convId);
+      renderGroupMembers(convId);
+
+      chatInputEl.value = '';
+      chatInputEl.focus();
+      sendBtn.disabled = true;
+    }
+
+    function hideMessagingPanel() {
+      messagingPanelEl.hidden = true;
+      rightPanel.hidden = true;
+    }
+
+    function renderChatWindow(convId) {
+      chatWindowEl.innerHTML = '';
+      const conv = conversations.find(c => c.id === convId);
+      if(!conv) return;
+
+      for(let msg of conv.messages) {
+        const sender = users.find(u => u.id === msg.sender);
+        if(!sender) continue;
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('chat-message');
+        const isSent = msg.sender === 'U1004'; // This user is teacher Tom, messages sent by this user are "sent"
+        messageDiv.classList.add(isSent ? 'sent' : 'received');
+
+        if(msg.type === 'text') {
+          messageDiv.textContent = msg.content;
+        } else if(msg.type === 'image') {
+          messageDiv.classList.add('image');
+          const img = document.createElement('img');
+          img.src = msg.content;
+          img.alt = `Image message from ${sender.name}`;
+          img.loading = 'lazy';
+          messageDiv.appendChild(img);
+        }
+
+        // Timestamp
+        const tsSpan = document.createElement('span');
+        tsSpan.className = 'timestamp';
+        tsSpan.textContent = formatTimestamp(msg.timestamp);
+        messageDiv.appendChild(tsSpan);
+
+        // Status icon for sent messages
+        if(isSent){
+          const statusSpan = document.createElement('span');
+          statusSpan.className = 'status-icon material-icons';
+          if(msg.status === 'sent'){
+            statusSpan.textContent = 'check';
+          } else if(msg.status === 'delivered'){
+            statusSpan.textContent = 'done_all';
+          } else if(msg.status === 'read'){
+            statusSpan.textContent = 'done_all';
+            statusSpan.style.color = '#22c55e'; // green for read
+          }
+          messageDiv.appendChild(statusSpan);
+        }
+
+        chatWindowEl.appendChild(messageDiv);
+      }
+
+      // Scroll to bottom
+      chatWindowEl.scrollTop = chatWindowEl.scrollHeight;
+    }
+
+    function renderGroupMembers(convId) {
+      groupMembersList.innerHTML = '';
+      const conv = conversations.find(c => c.id === convId);
+      if(!conv) return;
+      for(let participantId of conv.participants){
+        const user = users.find(u => u.id === participantId);
+        if(!user) continue;
+        const li = document.createElement('li');
+        const avatarDiv = document.createElement('div');
+        avatarDiv.className = 'avatar abbr';
+        avatarDiv.textContent = user.avatar;
+        avatarDiv.title = user.name;
+        li.appendChild(avatarDiv);
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = user.name;
+        li.appendChild(nameSpan);
+        groupMembersList.appendChild(li);
+      }
+    }
+
+    // Event listeners
+    chatInputEl.addEventListener('input', (e) => {
+      sendBtn.disabled = chatInputEl.value.trim() === '';
+    });
+
+    sendBtn.addEventListener('click', () => {
+      sendMessage();
+    });
+
+    chatInputEl.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if(!sendBtn.disabled){
+          sendMessage();
+        }
+      }
+    });
+
+    function sendMessage() {
+      const text = chatInputEl.value.trim();
+      if(text === '') return;
+      const conv = conversations.find(c => c.id === selectedConversationId);
+      if(!conv) return;
+      // Append message
+      conv.messages.push({
+        sender: 'U1004',
+        timestamp: new Date(),
+        type: 'text',
+        content: text,
+        status: 'sent'
+      });
+      chatInputEl.value = '';
+      sendBtn.disabled = true;
+      renderChatWindow(selectedConversationId);
+      chatInputEl.focus();
+    }
+
+    // Sidebar toggle for mobile/tablet
+    menuToggleBtn.addEventListener('click', () => {
+      sidebarCollapsed = !sidebarCollapsed;
+      updateSidebarState();
+    });
+
+    function updateSidebarState() {
+      if(sidebarCollapsed){
+        sidebar.classList.add('collapsed');
+        menuToggleBtn.setAttribute('aria-expanded', 'false');
+      } else {
+        sidebar.classList.remove('collapsed');
+        menuToggleBtn.setAttribute('aria-expanded', 'true');
+      }
+    }
+
+    // Initial render 
+    function init() {
+      renderStudentsList();
+      // Default select first student on desktop/tablet, or first conversation on mobile
+      if(window.innerWidth >= 768) {
+        selectStudent(students[0].id);
+      } else {
+        // For mobile, show conversations default
+        if(conversations.length > 0){
+          selectedConversationId = conversations[0].id;
+          renderConversationsList();
+          showMessagingPanel(selectedConversationId);
+          hideStudentInfo();
+        }
+      }
+      updateSidebarState();
+    }
+
+    // Responsive behavior on resize
+    window.addEventListener('resize', () => {
+      if(window.innerWidth >= 768 && sidebarCollapsed){
+        sidebarCollapsed = false;
+        updateSidebarState();
+      }
+    });
+
+    // Accessibility: trap focus within sidebar or messaging as appropriate could be added here for complex apps
+
+    init();
+
+  </script>
+</body>
+</html>
+
