@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnCode - Tutorials & Projects</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav a {
+            color: #fff;
+            margin: 0 15px;
+            text-decoration: none;
+        }
+        .welcome-banner {
+            text-align: center;
+            padding: 50px 20px;
+            background: #007BFF;
+            color: white;
+        }
+        .cta-buttons button {
+            margin: 10px;
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .tutorials, .projects {
+            padding: 20px;
+        }
+        .tutorial-card, .project-card {
+            background: white;
+            margin: 10px;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        footer {
+            background: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+            position: relative;
+            bottom: 0;
+            width: 100%;
+        }
+        .slider {
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+        .slider-track {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+        .slider-card {
+            min-width: 300px;
+            margin: 10px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .slider-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+        }
+        .slider-button.left {
+            left: 10px;
+        }
+        .slider-button.right {
+            right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>LearnCode</h1>
+    <nav>
+        <a href="#home">Home</a>
+        <a href="#tutorials">Tutorials</a>
+        <a href="#projects">Projects</a>
+        <a href="#about">About Us</a>
+        <a href="#contact">Contact</a>
+    </nav>
+</header>
+
+<div class="welcome-banner">
+    <h2>Welcome to LearnCode</h2>
+    <p>Your platform to learn programming and build projects.</p>
+    <div class="cta-buttons">
+        <button>Start Learning</button>
+        <button>Browse Projects</button>
+    </div>
+</div>
+
+<div class="slider">
+    <button class="slider-button left" id="prevSlide">❮</button>
+    <div class="slider-track" id="sliderTrack">
+        <div class="slider-card">
+            <h3>JavaScript Basics</h3>
+            <p>Learn the fundamentals of JavaScript programming.</p>
+        </div>
+        <div class="slider-card">
+            <h3>Python for Data Science</h3>
+            <p>Get started with data science concepts using Python.</p>
+        </div>
+        <div class="slider-card">
+            <h3>Java Fundamentals</h3>
+            <p>Master the basics of Java programming language.</p>
+        </div>
+    </div>
+    <button class="slider-button right" id="nextSlide">❯</button>
+</div>
+
+<section id="tutorials" class="tutorials">
+    <h2>Tutorials</h2>
+    <div class="tutorial-card">
+        <h3>JavaScript Basics</h3>
+        <p>Learn the fundamentals of JavaScript programming.</p>
+        <button>Start Tutorial</button>
+    </div>
+    <div class="tutorial-card">
+        <h3>Python for Data Science</h3>
+        <p>Get started with data science concepts using Python.</p>
+        <button>Start Tutorial</button>
+    </div>
+</section>
+
+<section id="projects" class="projects">
+    <h2>Projects</h2>
+    <div class="project-card">
+        <h3>To-Do List App</h3>
+        <p>Build a simple interactive To-Do List in JavaScript.</p>
+        <button>View Details</button>
+    </div>
+    <div class="project-card">
+        <h3>Weather App</h3>
+        <p>Create a weather application using API data.</p>
+        <button>View Details</button>
+    </div>
+</section>
+
+<footer>
+    <p>&copy; 2024 LearnCode. All rights reserved.</p>
+    <p>Follow us on social media!</p>
+</footer>
+
+<script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slider-card');
+    const totalSlides = slides.length;
+
+    document.getElementById('nextSlide').addEventListener('click', () => {
+        currentSlide = (currentSlide + 1) % totalSlides;
+        updateSlider();
+    });
+
+    document.getElementById('prevSlide').addEventListener('click', () => {
+        currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+        updateSlider();
+    });
+
+    function updateSlider() {
+        const sliderTrack = document.getElementById('sliderTrack');
+        sliderTrack.style.transform = `translateX(${-currentSlide * 100}%)`;
+    }
+</script>
+
+</body>
+</html>
